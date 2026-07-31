@@ -35,7 +35,7 @@ export class GeminiService {
             generationConfig: {
               temperature: 1.0,
               topP: 0.98,
-              topK: 40
+              topK: 50
             }
           });
           const systemPrompt = this.buildPrompt(options);
@@ -53,40 +53,41 @@ export class GeminiService {
       }
     }
 
-    return this.cleanPlaceholders(this.generateExplanatoryStory(options));
+    return this.cleanPlaceholders(this.generateZeroRepetitionStory(options));
   }
 
   private buildPrompt(options: PostGenerationOptions): string {
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
     const isLongRequested = options.userInstruction && /maior|longo|detalha|expanda|completo/i.test(options.userInstruction);
 
-    const randomHooksPrompt = [
-      'Comece o post de forma direta e entusiasmada sobre o aprendizado prático.',
-      'Comece com um questionamento sobre os desafios de arquitetura backend.',
-      'Comece como um diário de bordo pessoal contando a experiência do dia.',
-      'Comece destacando o impacto da refatoração de código na produtividade.',
-      'Comece explicando o cenário inicial de forma extremamente simples para leigos.'
+    const randomStylePrompt = [
+      'Use estilo de diário de bordo com títulos informais e parágrafos curtos.',
+      'Use estilo Q&A com perguntas e respostas didáticas (ex: ❓ O desafio?, 💡 Como foi resolvido?).',
+      'Use estilo de estudo de caso de arquitetura limpa e sem seções robóticas.',
+      'Use estilo de conversa direta de dev para dev com ganchos de perrengues e aprendizados.',
+      'Use estilo de artigo técnico focado no impacto de performance e boas práticas.'
     ];
 
-    const chosenHookDirective = randomHooksPrompt[Math.floor(Math.random() * randomHooksPrompt.length)];
+    const chosenStyleDirective = randomStylePrompt[Math.floor(Math.random() * randomStylePrompt.length)];
 
     return `
-Você é um Engenheiro de Software Sênior escrevendo um post EXPLICATIVO, DIDÁTICO E HUMANO no LinkedIn.
-Seu objetivo é contar a um público de desenvolvedores O QUE VOCÊ CONSTRUUIU E COMO RESOLVEU UM DESAFIO TÉCNICO.
+Você é um Engenheiro de Software Sênior escrevendo um post EXPLICATIVO, DIDÁTICO E TOTALMENTE ÚNICO no LinkedIn.
+Seu objetivo é contar O QUE VOCÊ CONSTRUUIU E COMO RESOLVEU UM DESAFIO TÉCNICO.
 
-SEED ÚNICO DE CRIAÇÃO (VARIABILIDADE TOTAL): ${randomSeed}
-ESTILO DA PRIMEIRA FRASE DE HOJE: ${chosenHookDirective}
+SEED ÚNICO DE CRIAÇÃO (VARIABILIDADE ABSOLUTA): ${randomSeed}
+DIRETRIZ DE ESTILO DE HOJE: ${chosenStyleDirective}
 
-REGRAS RÍGIDAS E ABSOLUTAS DE CONTEÚDO (CRÍTICO):
-1. 🛑 NUNCA USE A FRASE "Para quem acompanha minha rotina dev" OU FRASES REPETITIVAS. Mude completamente a frase de abertura a cada geração.
-2. 🛑 JAMAIS COPIE MENSAGENS BRUTAS DE COMMIT, HASHES, PRs OU IDs DE TAREFAS/JIRA (ex: JAMAIS use "DEV-126", "DEV-127", "Merge pull request #770", "fe7e4741").
-3. 🛑 TRADUZA SEMPRE AS TAREFAS PARA LINGUAGEM NATURAL DE ENGENHARIA. Explique a funcionalidade em português claro.
-4. 🛑 ASSUMA QUE O LEITOR NÃO CONHECE SEU PROJETO INTERNO: Explique o contexto de forma ampla e didática.
-5. 🛑 JAMAIS USE COLCHETES OU PLACEHOLDERS ("no nosso backend", "na nossa aplicação").
-6. 🛑 NUNCA mencione o nome de nenhuma empresa, cliente ou marca comercial.
-${isLongRequested ? '7. 📜 **O USUÁRIO PEDIU UM POST MAIOR E DETALHADO**: Escreva um artigo LONGO, aprofundado, com múltiplos parágrafos detalhando a arquitetura, os desafios e as soluções técnicas.' : ''}
+REGRAS DE ZERO REPETIÇÃO (MUITO IMPORTANTE):
+1. 🛑 NUNCA REPITA ESTRUTURAS FIXAS OU SEÇÕES PADRONIZADAS como "💡 O Cenário e o Desafio:", "🛠️ O que foi construído:". Crie títulos, conectivos e formatações completamente novos a cada post.
+2. 🛑 NUNCA USE A FRASE "Para quem acompanha minha rotina dev" OU QUALQUER OUTRA FRASE FIXA. A primeira linha deve ser 100% inédita.
+3. 🛑 JAMAIS COPIE MENSAGENS BRUTAS DE COMMIT, HASHES, PRs OU IDs DE TAREFAS/JIRA (ex: DEV-126, PR #770, hashes).
+4. 🛑 TRADUZA SEMPRE AS TAREFAS PARA LINGUAGEM NATURAL DE ENGENHARIA.
+5. 🛑 ASSUMA QUE O LEITOR NÃO CONHECE SEU PROJETO INTERNO: Explique o contexto de forma ampla e didática.
+6. 🛑 JAMAIS USE COLCHETES OU PLACEHOLDERS ("no nosso backend", "na nossa aplicação").
+7. 🛑 NUNCA mencione o nome de nenhuma empresa, cliente ou marca comercial.
+${isLongRequested ? '8. 📜 **O USUÁRIO PEDIU UM POST MAIOR E DETALHADO**: Escreva um artigo LONGO, aprofundado, com múltiplos parágrafos detalhando a arquitetura, os desafios e as soluções técnicas.' : ''}
 
-DADOS DAS ALTERAÇÕES (SINTETIZE EM FRASES HUMANAS):
+DADOS DAS ALTERAÇÕES (SINTETIZE EM FRASES HUMANAS INÉDITAS):
 - Repositório / Módulo: ${options.context.repoName}
 - Alterações Recentes:
 ${options.context.commits.map(c => `  * ${c}`).join('\n')}
@@ -95,11 +96,15 @@ ${options.context.changedFiles.slice(0, 10).map(f => `  * ${f}`).join('\n')}
 ${options.customNotes ? `- Notas Adicionais: ${options.customNotes}` : ''}
 ${options.userInstruction ? `\n⚠️ INSTRUÇÃO IMPORTANTE DO DESENVOLVEDOR:\n" ${options.userInstruction} "\n` : ''}
 
-Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída e profissional sem frases repetidas.
+Escreva em Português (pt-BR) de forma viva, Didática, fluída, humana e com ZERO repetição de estrutura.
 `;
   }
 
-  private generateExplanatoryStory(options: PostGenerationOptions): string {
+  /**
+   * Gerador Combinatório de Zero Repetição (Offline Fallback)
+   * Alterna dinamicamente 5 estruturas de títulos, 5 formatos de tópicos, 5 cabeçalhos e 5 desfechos.
+   */
+  private generateZeroRepetitionStory(options: PostGenerationOptions): string {
     const commits = options.context.commits;
     const files = options.context.changedFiles;
     const notes = options.customNotes?.trim();
@@ -119,7 +124,9 @@ Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída
     const stackStr = techStack.join(', ');
     const hashtagStr = techStack.map(t => `#${t.replace(/[^a-zA-Z0-9]/g, '')}`).join(' ');
 
-    // Pool diversificado de frases de abertura para garantir que NUNCA repita a primeira frase
+    const getRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+    // 1. Primeiras frases 100% variadas
     const openingHooks = [
       `🚀 No desenvolvimento do nosso ecossistema backend em ${stackStr}, hoje o foco foi totalmente voltado para refatoração e sincronização de serviços.`,
       `🚀 Quem trabalha com arquitetura modular em ${stackStr} sabe a importância de manter a comunicação entre serviços transparente e à prova de falhas.`,
@@ -130,7 +137,49 @@ Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída
       `🚀 Compartilhando um pouco do meu diário de código: trabalhei recentemente na reestruturação e melhoria das nossas rotas principais.`
     ];
 
-    const chosenOpening = openingHooks[Math.floor(Math.random() * openingHooks.length)];
+    // 2. Títulos de Seção de Desafio variados
+    const challengeHeaders = [
+      '🎯 **Contexto & O Desafio da Vez**:',
+      '❓ **Qual era o problema principal?**',
+      '🔍 **O Cenário de Engenharia Enfrentado**:',
+      '💡 **A Necessidade Técnica**:',
+      '📍 **Onde estava a fricção?**'
+    ];
+
+    // 3. Títulos de Seção de Solução variados
+    const solutionHeaders = [
+      '🛠️ **Entregas & Melhorias Aplicadas**:',
+      '⚙️ **Como resolvemos na prática**:',
+      '💡 **Soluções Implementadas**:',
+      '🚀 **O que foi construído na arquitetura**:',
+      '🛠️ **Etapas da Implementação**:'
+    ];
+
+    // 4. Marcadores de tópicos variados (bullets)
+    const bulletIcons = ['🔹', '•', '⚡', '✔', '👉'];
+    const chosenBullet = getRandom(bulletIcons);
+
+    // 5. Títulos da Stack variados
+    const stackHeaders = [
+      '🛠️ **Stack Tecnológica**:',
+      '💻 **Tecnologias Envolvidas**:',
+      '⚡ **Ferramentas Utilizadas**:',
+      '🛠️ **Tecnologias Chave**:'
+    ];
+
+    // 6. Desfecho e Aprendizado variados
+    const takeaways = [
+      '📈 **Por que isso é importante**:\nQuando garantimos o fluxo correto de sincronização e importação de dados no backend, evitamos falhas complexas em produção e aumentamos drasticamente a estabilidade da aplicação.',
+      '📈 **Resultado Prático**:\nInvestir tempo na refatoração da comunicação de microsserviços reduz o tempo de resposta e torna a arquitetura previsível diante de picos de carga.',
+      '📈 **Aprendizado de Dev**:\nA maior lição foi ver como um tratamento de exceções gracioso logo na camada de entrada evita falhas de integração que antes tomavam horas de debug.',
+      '📈 **Impacto na Produção**:\nPadronizar o isolamento e o processamento de registros permite deploys mais frequentes e com risco próximo de zero.'
+    ];
+
+    const chosenOpening = getRandom(openingHooks);
+    const chosenChallengeHead = getRandom(challengeHeaders);
+    const chosenSolutionHead = getRandom(solutionHeaders);
+    const chosenStackHead = getRandom(stackHeaders);
+    const chosenTakeaway = getRandom(takeaways);
 
     if (/maior|longo|detalha|expanda|completo/i.test(instruction)) {
       return `🚀 **Evolução Técnica & Artigo de Engenharia no Sistema Backend**
@@ -141,12 +190,12 @@ Trabalhar com ecossistemas de microsserviços modernos construídos em **${stack
 
 ---
 
-💡 **O Cenário e o Desafio Técnico Aprofundado**:
-O principal problema que precisávamos resolver era garantir a importação e o processamento de registros em tempo real sem gargalo de comunicação ou perdas de eventos de auditoria. Em sistemas de grande volume, chamadas assíncronas mal otimizadas podem gerar inconsistências nos dados de presença e controle de acesso.
+${chosenChallengeHead}
+O principal problema que precisávamos resolver era garantir a importação e o processamento de registros em tempo real sem gargalo de comunicação ou perdas de eventos de auditoria. Em sistemas de grande volume, chamadas assíncronas mal otimizadas podem gerar inconsistências nos dados.
 
 ---
 
-🛠️ **Detalhamento das Soluções e Implementações**:
+${chosenSolutionHead}
 
 Para resolver essa equação de forma definitiva e sustentável, dividi a atuação em frentes técnicas principais:
 
@@ -155,9 +204,7 @@ ${notes ? `\n4. **Notas Adicionais de Implementação**:\n   ${notes}` : ''}
 
 ---
 
-📈 **Principais Aprendizados & Impacto para o Time**:
-
-A maior lição desse processo foi reaprender que **garantir a sincronização em tempo real com tratamento gracioso de falhas é a chave para a confiabilidade de sistemas críticos**. Quando a arquitetura trata as exceções logo na entrada, o sistema se torna previsível e à prova de falhas em produção.
+${chosenTakeaway}
 
 Se você trabalha com integração em tempo real e microsserviços, como costuma estruturar a sincronização de logs por aí?
 
@@ -166,18 +213,17 @@ ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevO
 
     return `${chosenOpening}
 
-💡 **O Cenário e o Desafio**:
+${chosenChallengeHead}
 Precisávamos alinhar o fluxo de cadastro, importação de dados e sincronização de eventos em tempo real, garantindo que as chamadas fossem processadas sem latência e com total confiabilidade.
 
-🛠️ **O que foi construído e implementado**:
+${chosenSolutionHead}
 Para colocar a casa em ordem de forma definitiva, realizei as seguintes melhorias:
-${humanDeliveries.map(d => `🔹 ${d}`).join('\n')}
-${notes ? `🔹 ${notes}` : ''}
+${humanDeliveries.map(d => `${chosenBullet} ${d}`).join('\n')}
+${notes ? `${chosenBullet} ${notes}` : ''}
 
-🛠️ **Stack Tecnológica**: ${stackStr}.
+${chosenStackHead} ${stackStr}.
 
-📈 **Por que isso é importante**:
-Quando garantimos o fluxo correto de sincronização e importação de dados no backend, evitamos falhas complexas em produção e aumentamos drasticamente a estabilidade da aplicação.
+${chosenTakeaway}
 
 ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevLife`;
   }

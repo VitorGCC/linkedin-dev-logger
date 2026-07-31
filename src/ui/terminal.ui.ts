@@ -8,6 +8,7 @@ import { SanitizerService } from '../sanitizer/sanitizer.service';
 import { GeminiService } from '../ai/gemini.service';
 import { PostRepository } from '../storage/post.repository';
 import { LinkedInPublisherService } from '../publisher/linkedin.service';
+import { CardGenerator } from '../media/card.generator';
 
 export class TerminalUI {
   private gitCollector: GitCollector;
@@ -15,6 +16,8 @@ export class TerminalUI {
   private aiService: GeminiService;
   private postRepo: PostRepository;
   private publisher: LinkedInPublisherService;
+  private cardGenerator: CardGenerator;
+  private lastGeneratedCardPath: string | undefined;
 
   constructor(targetDir?: string) {
     this.gitCollector = new GitCollector(targetDir);
@@ -22,6 +25,7 @@ export class TerminalUI {
     this.aiService = new GeminiService();
     this.postRepo = new PostRepository();
     this.publisher = new LinkedInPublisherService();
+    this.cardGenerator = new CardGenerator();
   }
 
   public async start(): Promise<void> {
@@ -35,7 +39,6 @@ export class TerminalUI {
       console.log(chalk.white('Ainda assim, você pode digitar notas manuais para gerar o post.\n'));
     }
 
-    // Prompt for custom notes
     const { customNotes } = await inquirer.prompt([
       {
         type: 'input',
@@ -45,12 +48,10 @@ export class TerminalUI {
       }
     ]);
 
-    // 1. Coleta do Git
     const spinnerGit = ora('Analisando o histórico e diffs do Git...').start();
     const rawContext = this.gitCollector.collectContext({ since: '00:00:00' });
     spinnerGit.succeed(`Git analisado! (${rawContext.commits.length} commits encontrados)`);
 
-    // 2. Sanitização & Privacidade
     const spinnerSanitize = ora('Sanitizando dados para garantir privacidade e anonimato...').start();
     const { sanitizedContext, sanitizedNotes, redactedTermsCount } = this.sanitizer.sanitizeContext(
       rawContext,
@@ -60,13 +61,11 @@ export class TerminalUI {
       `Dados sanitizados com sucesso! (${redactedTermsCount} termos/dados sensíveis removidos ou mascarados)`
     );
 
-    // 3. Checagem da IA
     if (!this.aiService.isConfigured()) {
       console.log('\n' + chalk.bold.yellow('💡 Nenhuma GEMINI_API_KEY foi detectada no .env.'));
       console.log(chalk.gray('Executando em Modo de Demonstração para testes dos módulos.\n'));
     }
 
-    // 4. Geração do Post pela IA
     await this.generatePost(sanitizedContext, sanitizedNotes);
   }
 
@@ -79,6 +78,28 @@ export class TerminalUI {
         userInstruction
       });
       spinnerAI.succeed('Post gerado com sucesso!\n');
+
+      // Gerar Card Visual PNG para o LinkedIn (Fase 1)
+      const spinnerCard = ora('Gerando Card Visual em PNG (1200x630px)...').start();
+      try {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const cardFilename = `card_${sanitizedContext.repoName}_${timestamp}.png`;
+        const cardPath = path.join(process.cwd(), '.posts', cardFilename);
+
+        const firstLine = postText.split('\n')[0].replace(/^[🚀💡🛠️📈\s]+/, '').trim();
+        const techStack = this.extractTechStack(sanitizedContext);
+
+        this.lastGeneratedCardPath = await this.cardGenerator.generateCard({
+          title: firstLine || 'Estudo de Caso de Engenharia de Software',
+          subtitle: `Arquitetura & Implementação • ${sanitizedContext.repoName}`,
+          techStack,
+          outputPath: cardPath
+        });
+        spinnerCard.succeed(`Card Visual gerado com sucesso: ${chalk.bold(cardPath)}\n`);
+      } catch {
+        spinnerCard.warn('Não foi possível gerar a imagem do Card Visual. O post prosseguirá apenas com texto.\n');
+        this.lastGeneratedCardPath = undefined;
+      }
       
       this.displayPost(postText);
       await this.showOptionsMenu(postText, sanitizedContext, sanitizedNotes);
@@ -92,6 +113,9 @@ export class TerminalUI {
     console.log(chalk.bold.white(' PREVIEW DO POST PARA O LINKEDIN:'));
     console.log(chalk.bold.green('----------------------------------------------------'));
     console.log(chalk.white(postText));
+    if (this.lastGeneratedCardPath) {
+      console.log(chalk.bold.cyan(`🖼️  CARD VISUAL ANEXADO: ${this.lastGeneratedCardPath}`));
+    }
     console.log(chalk.bold.green('----------------------------------------------------\n'));
   }
 
@@ -104,7 +128,7 @@ export class TerminalUI {
         choices: [
           { name: '💾 Salvar localmente em Markdown (.posts/)', value: 'save' },
           { name: '🔄 Regenerar / Pedir ajustes para a IA', value: 'refine' },
-          { name: '🚀 Publicar no LinkedIn (Fase 6 - API)', value: 'publish' },
+          { name: '🚀 Publicar no LinkedIn (com Card Visual)', value: 'publish' },
           { name: '❌ Sair', value: 'exit' }
         ]
       }
@@ -114,6 +138,9 @@ export class TerminalUI {
       case 'save': {
         const savedPath = this.postRepo.savePost(postText, sanitizedContext.repoName);
         console.log(chalk.green(`\n✅ Post salvo com sucesso em: ${chalk.bold(savedPath)}\n`));
+        if (this.lastGeneratedCardPath) {
+          console.log(chalk.cyan(`🖼️  Card visual salvo em: ${chalk.bold(this.lastGeneratedCardPath)}\n`));
+        }
         await this.showOptionsMenu(postText, sanitizedContext, sanitizedNotes);
         break;
       }
@@ -133,17 +160,8 @@ export class TerminalUI {
 
         if (!token || token.trim() === '') {
           console.log('\n' + chalk.bold.cyan('----------------------------------------------------'));
-          console.log(chalk.bold.cyan(' 🔑 CONFIGURAÇÃO DO LINKEDIN ACCESS TOKEN (Fase 6)'));
+          console.log(chalk.bold.cyan(' 🔑 CONFIGURAÇÃO DO LINKEDIN ACCESS TOKEN'));
           console.log(chalk.bold.cyan('----------------------------------------------------'));
-          console.log(
-            chalk.white(
-              'Para publicar diretamente no seu perfil do LinkedIn, você precisa de um Access Token do LinkedIn.\n' +
-              'Instruções rápidas:\n' +
-              '1. Acesse: https://www.linkedin.com/developers/tools/oauth/token-generator\n' +
-              '2. Selecione as permissões: w_member_social (Share on LinkedIn)\n' +
-              '3. Cole o token abaixo:\n'
-            )
-          );
 
           const { userToken } = await inquirer.prompt([
             {
@@ -162,7 +180,6 @@ export class TerminalUI {
 
           token = userToken.trim();
 
-          // Salvar token no .env para uso futuro
           const envPath = path.join(process.cwd(), '.env');
           let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : '';
           if (!envContent.includes('LINKEDIN_ACCESS_TOKEN')) {
@@ -179,9 +196,6 @@ export class TerminalUI {
           try {
             personUrn = await publisher.getPersonUrn();
           } catch {
-            console.log('\n' + chalk.yellow('ℹ️ Precisamos registrar o ID do seu perfil do LinkedIn uma única vez.'));
-            console.log(chalk.gray('Abra o seu perfil no LinkedIn no navegador (ex: https://www.linkedin.com/in/seu-nome).\n'));
-
             const { inputUrn } = await inquirer.prompt([
               {
                 type: 'input',
@@ -197,7 +211,6 @@ export class TerminalUI {
               }
               personUrn = cleanId;
 
-              // Salvar no .env
               const envPath = path.join(process.cwd(), '.env');
               let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : '';
               if (!envContent.includes('LINKEDIN_PERSON_URN')) {
@@ -209,12 +222,12 @@ export class TerminalUI {
         }
 
         const publisherWithUrn = new LinkedInPublisherService(token, personUrn);
-        const spinnerPub = ora('Enviando o post para a API do LinkedIn...').start();
+        const spinnerPub = ora('Enviando post e enviando o Card Visual para a API do LinkedIn...').start();
 
-        const result = await publisherWithUrn.publishPost(postText);
+        const result = await publisherWithUrn.publishPost(postText, this.lastGeneratedCardPath);
 
         if (result.success) {
-          spinnerPub.succeed(chalk.bold.green('🎉 POST PUBLICADO NO LINKEDIN COM SUCESSO!'));
+          spinnerPub.succeed(chalk.bold.green(result.message));
           console.log(chalk.cyan(`\nVeja seu perfil no LinkedIn: ${result.postUrl}\n`));
         } else {
           spinnerPub.fail(chalk.bold.red('Erro ao publicar no LinkedIn:'));
@@ -228,5 +241,19 @@ export class TerminalUI {
         console.log(chalk.cyan('Até logo! Bons códigos e bons posts. 🚀'));
         break;
     }
+  }
+
+  private extractTechStack(context: any): string[] {
+    const files: string[] = context.changedFiles || [];
+    const techStack: string[] = [];
+
+    if (files.some(f => f.includes('docker') || f.includes('.yml') || f.includes('Dockerfile'))) techStack.push('Docker');
+    if (files.some(f => f.includes('keycloak') || f.includes('auth'))) techStack.push('Keycloak');
+    if (files.some(f => f.includes('.ts') || f.includes('tsconfig'))) techStack.push('TypeScript');
+    if (files.some(f => f.includes('prisma') || f.includes('schema'))) techStack.push('Prisma');
+    if (files.some(f => f.includes('controller') || f.includes('service') || f.includes('nest'))) techStack.push('NestJS');
+    if (files.some(f => f.includes('.tsx') || f.includes('react'))) techStack.push('React');
+
+    return techStack.length > 0 ? techStack : ['TypeScript', 'Node.js', 'Backend'];
   }
 }

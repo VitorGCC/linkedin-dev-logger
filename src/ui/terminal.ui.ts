@@ -70,6 +70,9 @@ export class TerminalUI {
   }
 
   private async generatePost(sanitizedContext: any, sanitizedNotes: string, userInstruction?: string): Promise<void> {
+    // Se já existia um card temporário anterior de uma regeneração, limpa ele primeiro
+    this.cleanupTempCard();
+
     const spinnerAI = ora('IA está escrevendo um post técnico engajador para o LinkedIn...').start();
     try {
       const postText = await this.aiService.generateLinkedInPost({
@@ -238,8 +241,18 @@ export class TerminalUI {
         break;
       }
       case 'exit':
+        this.cleanupTempCard();
         console.log(chalk.cyan('Até logo! Bons códigos e bons posts. 🚀'));
         break;
+    }
+  }
+
+  private cleanupTempCard(): void {
+    if (this.lastGeneratedCardPath && fs.existsSync(this.lastGeneratedCardPath)) {
+      try {
+        fs.unlinkSync(this.lastGeneratedCardPath);
+        this.lastGeneratedCardPath = undefined;
+      } catch {}
     }
   }
 

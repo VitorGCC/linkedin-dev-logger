@@ -60,19 +60,31 @@ export class GeminiService {
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
     const isLongRequested = options.userInstruction && /maior|longo|detalha|expanda|completo/i.test(options.userInstruction);
 
+    const randomHooksPrompt = [
+      'Comece o post de forma direta e entusiasmada sobre o aprendizado prático.',
+      'Comece com um questionamento sobre os desafios de arquitetura backend.',
+      'Comece como um diário de bordo pessoal contando a experiência do dia.',
+      'Comece destacando o impacto da refatoração de código na produtividade.',
+      'Comece explicando o cenário inicial de forma extremamente simples para leigos.'
+    ];
+
+    const chosenHookDirective = randomHooksPrompt[Math.floor(Math.random() * randomHooksPrompt.length)];
+
     return `
 Você é um Engenheiro de Software Sênior escrevendo um post EXPLICATIVO, DIDÁTICO E HUMANO no LinkedIn.
 Seu objetivo é contar a um público de desenvolvedores O QUE VOCÊ CONSTRUUIU E COMO RESOLVEU UM DESAFIO TÉCNICO.
 
-SEED ÚNICO DE CRIAÇÃO: ${randomSeed}
+SEED ÚNICO DE CRIAÇÃO (VARIABILIDADE TOTAL): ${randomSeed}
+ESTILO DA PRIMEIRA FRASE DE HOJE: ${chosenHookDirective}
 
 REGRAS RÍGIDAS E ABSOLUTAS DE CONTEÚDO (CRÍTICO):
-1. 🛑 JAMAIS COPIE MENSAGENS BRUTAS DE COMMIT, HASHES, PRs OU IDs DE TAREFAS/JIRA (ex: JAMAIS use "DEV-126", "DEV-127", "Merge pull request #770", "fe7e4741").
-2. 🛑 TRADUZA SEMPRE AS TAREFAS PARA LINGUAGEM NATURAL DE ENGENHARIA. Explique a funcionalidade em português claro (ex: em vez de "DEV-126 feat(rep-events)", escreva "Implementação de cadastro e sincronização de usuários em tempo real para dispositivos de acesso").
-3. 🛑 ASSUMA QUE O LEITOR NÃO CONHECE SEU PROJETO INTERNO: Comece sempre explicando o contexto do sistema de forma ampla e didática.
-4. 🛑 JAMAIS USE COLCHETES OU PLACEHOLDERS ("no nosso backend", "na nossa aplicação").
-5. 🛑 NUNCA mencione o nome de nenhuma empresa, cliente ou marca comercial.
-${isLongRequested ? '6. 📜 **O USUÁRIO PEDIU UM POST MAIOR E DETALHADO**: Escreva um artigo LONGO, aprofundado, com múltiplos parágrafos detalhando a arquitetura, os desafios e as soluções técnicas.' : ''}
+1. 🛑 NUNCA USE A FRASE "Para quem acompanha minha rotina dev" OU FRASES REPETITIVAS. Mude completamente a frase de abertura a cada geração.
+2. 🛑 JAMAIS COPIE MENSAGENS BRUTAS DE COMMIT, HASHES, PRs OU IDs DE TAREFAS/JIRA (ex: JAMAIS use "DEV-126", "DEV-127", "Merge pull request #770", "fe7e4741").
+3. 🛑 TRADUZA SEMPRE AS TAREFAS PARA LINGUAGEM NATURAL DE ENGENHARIA. Explique a funcionalidade em português claro.
+4. 🛑 ASSUMA QUE O LEITOR NÃO CONHECE SEU PROJETO INTERNO: Explique o contexto de forma ampla e didática.
+5. 🛑 JAMAIS USE COLCHETES OU PLACEHOLDERS ("no nosso backend", "na nossa aplicação").
+6. 🛑 NUNCA mencione o nome de nenhuma empresa, cliente ou marca comercial.
+${isLongRequested ? '7. 📜 **O USUÁRIO PEDIU UM POST MAIOR E DETALHADO**: Escreva um artigo LONGO, aprofundado, com múltiplos parágrafos detalhando a arquitetura, os desafios e as soluções técnicas.' : ''}
 
 DADOS DAS ALTERAÇÕES (SINTETIZE EM FRASES HUMANAS):
 - Repositório / Módulo: ${options.context.repoName}
@@ -83,7 +95,7 @@ ${options.context.changedFiles.slice(0, 10).map(f => `  * ${f}`).join('\n')}
 ${options.customNotes ? `- Notas Adicionais: ${options.customNotes}` : ''}
 ${options.userInstruction ? `\n⚠️ INSTRUÇÃO IMPORTANTE DO DESENVOLVEDOR:\n" ${options.userInstruction} "\n` : ''}
 
-Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída e profissional sem copiar textos brutos do git.
+Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída e profissional sem frases repetidas.
 `;
   }
 
@@ -106,6 +118,19 @@ Escreva em Português (pt-BR) de forma extremamente explicativa, humana, fluída
 
     const stackStr = techStack.join(', ');
     const hashtagStr = techStack.map(t => `#${t.replace(/[^a-zA-Z0-9]/g, '')}`).join(' ');
+
+    // Pool diversificado de frases de abertura para garantir que NUNCA repita a primeira frase
+    const openingHooks = [
+      `🚀 No desenvolvimento do nosso ecossistema backend em ${stackStr}, hoje o foco foi totalmente voltado para refatoração e sincronização de serviços.`,
+      `🚀 Quem trabalha com arquitetura modular em ${stackStr} sabe a importância de manter a comunicação entre serviços transparente e à prova de falhas.`,
+      `🚀 Mais um dia de aprendizado prático em engenharia de software! Desta vez, trabalhei no alinhamento da infraestrutura backend.`,
+      `🚀 Garantir alta disponibilidade e sincronização em tempo real é sempre um desafio instigante na nossa rotina em ${stackStr}.`,
+      `🚀 Hoje passei por uma experiência rica de desenvolvimento ajustando pontos críticos de integração e processamento no nosso backend.`,
+      `🚀 Sabe aquele tipo de demanda que parece pontual, mas traz um ganho de estabilidade enorme para a aplicação? Foi o foco do meu dia em ${stackStr}.`,
+      `🚀 Compartilhando um pouco do meu diário de código: trabalhei recentemente na reestruturação e melhoria das nossas rotas principais.`
+    ];
+
+    const chosenOpening = openingHooks[Math.floor(Math.random() * openingHooks.length)];
 
     if (/maior|longo|detalha|expanda|completo/i.test(instruction)) {
       return `🚀 **Evolução Técnica & Artigo de Engenharia no Sistema Backend**
@@ -139,7 +164,7 @@ Se você trabalha com integração em tempo real e microsserviços, como costuma
 ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevOps #DeveloperJournal`;
     }
 
-    return `🚀 Para quem acompanha minha rotina dev: venho trabalhando na estruturação da arquitetura backend de um sistema modular construído em ${stackStr}.
+    return `${chosenOpening}
 
 💡 **O Cenário e o Desafio**:
 Precisávamos alinhar o fluxo de cadastro, importação de dados e sincronização de eventos em tempo real, garantindo que as chamadas fossem processadas sem latência e com total confiabilidade.
@@ -157,10 +182,6 @@ Quando garantimos o fluxo correto de sincronização e importação de dados no 
 ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevLife`;
   }
 
-  /**
-   * Converte commits e tarefas brutos do Git em frases didáticas de engenharia em português
-   * limpando totalmente PRs, hashes, tickets Jira (DEV-126) e códigos internos.
-   */
   private translateCommitsToHumanNarrative(commits: string[]): string[] {
     if (!commits || commits.length === 0) {
       return ['Reestruturação de rotas e melhoria na estabilidade da aplicação'];
@@ -171,12 +192,10 @@ ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevL
     for (const commit of commits) {
       let msg = commit.trim();
 
-      // Ignorar linhas puras de merge PR
       if (msg.toLowerCase().includes('merge pull request') || msg.toLowerCase().includes('sincronização de branch')) {
         continue;
       }
 
-      // Remover hashes, tickets (DEV-126) e datas
       msg = msg
         .replace(/^[a-f0-9]{7,8}\s*-\s*/i, '')
         .replace(/\b[A-Z]{2,8}-\d{1,6}\b/gi, '')
@@ -186,7 +205,6 @@ ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevL
 
       if (!msg) continue;
 
-      // Traduzir convenções técnicas para frases explicativas humanas
       if (msg.includes('cadastro/edição de usuário em tempo real') || msg.includes('rep-events')) {
         narrativaAdd(narrative, 'Implementação de cadastro e sincronização de usuários em tempo real para controle de acesso');
       } else if (msg.includes('importação manual de logs') || msg.includes('rep-agent')) {
@@ -198,7 +216,6 @@ ${hashtagStr} #SoftwareEngineering #Backend #SystemArchitecture #CleanCode #DevL
       } else if (msg.includes('keycloak') || msg.includes('auth')) {
         narrativaAdd(narrative, 'Integração e ajuste da camada de autenticação centralizada com Keycloak');
       } else {
-        // Limpar prefixos feat/fix/refactor
         let cleanMsg = msg.replace(/^(feat|fix|refactor|chore|docs|test)(\([^)]+\))?:\s*/i, '').trim();
         if (cleanMsg.length > 3) {
           cleanMsg = cleanMsg.charAt(0).toUpperCase() + cleanMsg.slice(1);

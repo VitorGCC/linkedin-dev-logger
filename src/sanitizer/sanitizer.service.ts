@@ -39,7 +39,23 @@ export class SanitizerService {
       if (!str) return '';
       let result = str;
 
-      // 1. Remove forbidden company / brand / client names using natural replacement
+      // 1. Limpar mensagens de Merge Pull Request e nomes de branches corporativos
+      result = result.replace(/Merge\s+pull\s+request\s+#\d+\s+from\s+[^\s]+/gi, () => {
+        redactedCount++;
+        return 'Sincronização de branch de desenvolvimento';
+      });
+
+      // 2. Limpar IDs de tarefas/Jira (ex: DEV-126, DEV-127, TASK-99, PR #770)
+      result = result.replace(/\b[A-Z]{2,8}-\d{1,6}\b/g, () => {
+        redactedCount++;
+        return '';
+      });
+      result = result.replace(/#\d{1,6}\b/g, '');
+
+      // 3. Limpar timestaps de git (ex: "(23 hours ago)", "(2 days ago)")
+      result = result.replace(/\(\d+\s+(hours|days|minutes|weeks|ago)\)/gi, '');
+
+      // 4. Remover marcas e palavras proibidas corporativas
       for (const word of this.config.forbiddenWords) {
         if (!word || word.trim() === '') continue;
         const regex = new RegExp(word, 'gi');
@@ -50,7 +66,7 @@ export class SanitizerService {
         }
       }
 
-      // 2. Mask Emails
+      // 5. Remover e-mails
       if (this.config.maskEmails) {
         const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
         result = result.replace(emailRegex, () => {
@@ -59,7 +75,7 @@ export class SanitizerService {
         });
       }
 
-      // 3. Mask Domains / URLs (keep generic ones like github/npm, scrub internal ones)
+      // 6. Mascarar URLs e domínios
       if (this.config.maskDomains) {
         const urlRegex = /(https?:\/\/[^\s"'<>\\]+)/g;
         result = result.replace(urlRegex, (url) => {
@@ -71,13 +87,14 @@ export class SanitizerService {
         });
       }
 
-      // 4. Mask Secrets / Tokens / Keys
+      // 7. Mascarar credenciais
       if (this.config.maskSecrets) {
         result = result.replace(/bearer\s+[a-zA-Z0-9._\-]+/gi, 'Bearer [token-oculto]');
         result = result.replace(/(api_key|secret|password|passwd|pwd|token)\s*[:=]\s*["']?[^\s"']+/gi, '$1=[credencial-ocultada]');
       }
 
-      return result;
+      // Limpar múltiplos espaços remanescentes
+      return result.replace(/\s+/g, ' ').trim();
     };
 
     let sanitizedRepoName = sanitizeString(context.repoName);
@@ -85,7 +102,7 @@ export class SanitizerService {
       sanitizedRepoName = 'sistema-backend';
     }
 
-    const sanitizedCommits = context.commits.map(sanitizeString);
+    const sanitizedCommits = context.commits.map(sanitizeString).filter(c => c.trim().length > 0);
     const sanitizedChangedFiles = context.changedFiles.map(sanitizeString);
     const sanitizedDiffStat = sanitizeString(context.diffStat);
     const sanitizedRecentDiffs = sanitizeString(context.recentDiffs);

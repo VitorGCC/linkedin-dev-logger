@@ -1,10 +1,10 @@
 {
   "privacy": {
     "forbiddenWords": [
-      "Soltech",
-      "Ultraponto",
-      "EmpresaX",
-      "ClienteY",
+      "EmpresaExemplo1",
+      "EmpresaExemplo2",
+      "ClienteA",
+      "ClienteB",
       "Confidencial"
     ],
     "maskEmails": true,

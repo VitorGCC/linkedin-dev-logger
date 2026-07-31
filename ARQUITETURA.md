@@ -42,7 +42,7 @@ flowchart TD
 ### 3. Motor de Anonimização & Sanitização (`src/sanitizer/sanitizer.service.ts`)
 - **O que faz**: Garante a **Zero-Company Policy** e conformidade com NDAs. O que for confidencial é mascarado antes mesmo de ser enviado para a IA.
 - **Como funciona**:
-  - Lê o arquivo `config.json` e pega a lista `forbiddenWords` (ex: `Soltech`, `Ultraponto`).
+  - Lê o arquivo `config.json` e pega a lista `forbiddenWords` (ex: `EmpresaExemplo1`, `EmpresaExemplo2`).
   - Executa substituições com Regex para remover e-mails (`[email-protegido]`), URLs internas (`[url-interna]`) e credenciais (`[credencial-ocultada]`).
   - Substitui nomes de projetos de clientes por expressões neutras fluídas como `sistema-backend`.
 

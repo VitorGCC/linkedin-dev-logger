@@ -16,7 +16,7 @@ O **DevToLinkedIn CLI** é uma ferramenta de linha de comando em Node.js e TypeS
 A ferramenta conta com um **Motor de Sanitização de 2 Camadas**:
 
 1. **Filtro Automático de Sanitização**: Antes de qualquer envio de dados para a IA, o script remove e substitui:
-   - Nomes de empresas configurados (ex: `Soltech`, `Ultraponto`, etc.).
+   - Nomes de empresas configurados (ex: `EmpresaExemplo1`, `EmpresaExemplo2`, etc.).
    - E-mails corporativos (`[email-protegido]`).
    - URLs e domínios internos (`[url-interna]`).
    - Tokens, chaves de API e credenciais (`[credencial-ocultada]`).
@@ -79,10 +79,10 @@ No arquivo `config.json`, adicione os nomes de empresas ou clientes que devem se
 {
   "privacy": {
     "forbiddenWords": [
-      "Soltech",
-      "Ultraponto",
-      "EmpresaX",
-      "ClienteY"
+      "EmpresaExemplo1",
+      "EmpresaExemplo2",
+      "ClienteA",
+      "ClienteB"
     ],
     "maskEmails": true,
     "maskDomains": true,

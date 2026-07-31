@@ -24,7 +24,7 @@ export class SanitizerService {
       };
     } else {
       this.config = {
-        forbiddenWords: ['Soltech', 'Ultraponto'],
+        forbiddenWords: ['EmpresaExemplo1', 'EmpresaExemplo2'],
         maskEmails: true,
         maskDomains: true,
         maskSecrets: true

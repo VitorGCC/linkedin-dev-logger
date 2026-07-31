@@ -8,9 +8,9 @@ Manual rápido de instruções de uso no terminal para rodar o gerador e publica
 
 Você pode executar o analisador apontando para qualquer pasta de projeto no seu computador usando a flag `-d` (directory):
 
-### Exemplo 1: Rodar no projeto `Soltech`
+### Exemplo 1: Rodar no projeto `MeuProjeto1`
 ```bash
-node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vitorgabriel/dev/vitor/Soltech
+node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vitorgabriel/dev/vitor/MeuProjeto1
 ```
 
 ### Exemplo 2: Rodar no projeto `WebAPP`
@@ -18,9 +18,9 @@ node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vit
 node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vitorgabriel/dev/vitor/WebAPP
 ```
 
-### Exemplo 3: Rodar no projeto `henry-primme-sf`
+### Exemplo 3: Rodar no projeto `MeuProjeto2`
 ```bash
-node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vitorgabriel/dev/vitor/henry-primme-sf
+node /home/vitorgabriel/dev/vitor/linkedin-dev-logger/dist/index.js -d /home/vitorgabriel/dev/vitor/MeuProjeto2
 ```
 
 ---
@@ -45,7 +45,7 @@ Para não precisar digitar o caminho completo toda vez, você pode criar um atal
 ### Como usar o atalho:
 Agora você pode entrar em qualquer pasta de projeto e rodar diretamente:
 ```bash
-cd /home/vitorgabriel/dev/vitor/Soltech
+cd /home/vitorgabriel/dev/vitor/MeuProjeto1
 linkedin-logger
 ```
 
@@ -75,8 +75,8 @@ Se você começar a trabalhar em um novo cliente ou empresa e quiser garantir qu
    {
      "privacy": {
        "forbiddenWords": [
-         "Soltech",
-         "Ultraponto",
+         "EmpresaExemplo1",
+         "EmpresaExemplo2",
          "NovoCliente",
          "MarcaSecreta"
        ]
@@ -93,7 +93,7 @@ Toda vez que você seleciona a opção **"💾 Salvar localmente em Markdown"**,
 `file:///home/vitorgabriel/dev/vitor/linkedin-dev-logger/.posts/`
 
 Exemplo de arquivo gerado:
-`post_Soltech_2026-07-31_12-24.md`
+`post_sistema-backend_2026-07-31_12-24.md`
 
 ---
 

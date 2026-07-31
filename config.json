@@ -1,0 +1,20 @@
+{
+  "privacy": {
+    "forbiddenWords": [
+      "Soltech",
+      "Ultraponto",
+      "EmpresaX",
+      "ClienteY",
+      "Confidencial"
+    ],
+    "maskEmails": true,
+    "maskDomains": true,
+    "maskSecrets": true
+  },
+  "ai": {
+    "model": "gemini-2.5-flash",
+    "language": "pt-BR",
+    "tone": "Engenheiro de Software Sênior, profissional, entusiasmado com desafios técnicos e aprendizado contínuo",
+    "maxPostLength": 1800
+  }
+}

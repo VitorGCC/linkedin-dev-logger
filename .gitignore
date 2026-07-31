@@ -1,0 +1,19 @@
+# Dependências
+node_modules/
+
+# Segredos e Chaves de API (NUNCA SUBIR PRO GIT)
+.env
+.env.local
+.env.*.local
+
+# Arquivos de Build
+dist/
+
+# Histórico local de posts gerados
+.posts/
+
+# Logs e arquivos do sistema
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
